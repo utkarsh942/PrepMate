@@ -5,13 +5,17 @@ import Container from "../components/container";
 import ResultDonut from "./CircularProgress";
 import React from "react";
 
-const Total_Time = 10 * 60
+const settings =localStorage.getItem("prepmate-test-settings")
+const Total_Time = settings?settings.time *60:10*60
 const STORAGE_KEY = "prepmate-exam-state"
 
 const Quiz = ({ mode }) => {
   const { topicId } = useParams();
 
   let questions = [];
+  if(settings?.questionCount){
+    questions = questions.slice(0,settings.questionCount)
+  }
 
   if (mode === "all") {
     topics.forEach((t) => questions.push(...t.questions));
@@ -179,17 +183,17 @@ const [lastSwitchTime, setLastSwitchTime] = useState(Date.now());
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col justify-center gap-4">
 
           <div className="flex justify-between text-lg">
-            <span className="text-green-400">🟢 Correct</span>
+            <span className="text-green-400"> Correct</span>
             <span>{correct}</span>
           </div>
 
           <div className="flex justify-between text-lg">
-            <span className="text-yellow-400">🟡 Unattempted</span>
+            <span className="text-yellow-400"> Unattempted</span>
             <span>{unattempted}</span>
           </div>
 
           <div className="flex justify-between text-lg">
-            <span className="text-red-400">🔴 Wrong</span>
+            <span className="text-red-400"> Wrong</span>
             <span>{wrong}</span>
           </div>
 
@@ -318,7 +322,7 @@ const [lastSwitchTime, setLastSwitchTime] = useState(Date.now());
               onClick={toggleMark}
               className="px-4 py-2 bg-yellow-600 rounded"
             >
-              ⭐ Mark for Review
+               Mark for Review
             </button>
 
             {current === questions.length - 1 ? (

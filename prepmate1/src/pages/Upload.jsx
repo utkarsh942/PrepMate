@@ -41,14 +41,14 @@ const Upload = () => {
 
   const handleFullTest = () => {
     if (!file) return alert("Please upload a file first");
-    navigate("/quiz/all");
+    navigate("/test-setup");
   };
 
   return (
     <Container>
       <div className="max-w-4xl mx-auto">
 
-        {/* Title */}
+      
         <h1 className="text-2xl font-bold mb-3 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
           Upload Your Notes 
         </h1>
@@ -56,7 +56,7 @@ const Upload = () => {
           Turn your notes into smart tests, topics & performance analysis.
         </p>
 
-       {/* Upload Card */}
+       
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8 backdrop-blur shadow-xl">
 
           {/* Drag & Drop Area */}
@@ -117,7 +117,7 @@ const Upload = () => {
             onClick={handleExtract}
             className="flex-1 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 transition disabled:opacity-40 font-semibold"
           >
-            🔍 Extract Important Topics
+             Extract Important Topics
           </button>
 
           <button
@@ -125,7 +125,7 @@ const Upload = () => {
             onClick={handleFullTest}
             className="flex-1 py-4 rounded-xl bg-green-600 hover:bg-green-500 transition disabled:opacity-40 font-semibold"
           >
-            🧠 Start Full Test
+             Start Full Test
           </button>
         </div>
 

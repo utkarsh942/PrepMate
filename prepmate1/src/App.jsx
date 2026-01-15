@@ -17,6 +17,7 @@ import Signup from "./pages/auth/Signup";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./pages/ProtectedRoute";
+import TestSetup from "./pages/TestSetup";
 
 const App = () => {
   const location = useLocation();
@@ -29,10 +30,10 @@ const App = () => {
       {showNavbar && <Navbar />}
 
       <Routes>
-        {/* Home */}
+        
         <Route path="/" element={<Home />} />
 
-        {/* Main app pages (NO NAVBAR) */}
+        
        <Route
   path="/upload"
   element={
@@ -113,8 +114,15 @@ const App = () => {
     </ProtectedRoute>
   }
 />
-
-        {/* Auth pages (WITH AuthLayout) */}
+<Route
+path = "/test-setup"
+  element={
+    <ProtectedRoute>
+      <TestSetup />
+    </ProtectedRoute>
+  }
+/>
+        
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
