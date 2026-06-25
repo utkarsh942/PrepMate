@@ -1,166 +1,226 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Container from "../components/container";
-import axios from "axios";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Upload as UploadIcon, FileText, X, Loader2, Sparkles, BookOpen } from 'lucide-react';
+import api from '../utils/api';
+import { toast } from '../components/Toast';
 
 const Upload = () => {
-  const [file, setFile] = useState(null);
   const navigate = useNavigate();
-  const [dragActive ,setDragActive] = useState(false);
-  const BASE_URL = import.meta.env.VITE_BASE_URL;
+  const [file, setFile] = useState(null);
+  const [title, setTitle] = useState('');
+  const [subject, setSubject] = useState('');
+  const [description, setDescription] = useState('');
+  const [dragActive, setDragActive] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFileChange = (e) => {
-    if (e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+    if (e.target.files && e.target.files[0]) {
+      const selected = e.target.files[0];
+      if (selected.type !== 'application/pdf') {
+        toast.error('Only PDF files are supported');
+        return;
+      }
+      setFile(selected);
+      // Auto-populate title if empty
+      if (!title) {
+        setTitle(selected.name.replace(/\.[^/.]+$/, ""));
+      }
     }
   };
-   
+
   const handleDragOver = (e) => {
     e.preventDefault();
     setDragActive(true);
-  }
+  };
+
   const handleDragLeave = (e) => {
+    e.preventDefault();
     setDragActive(false);
-  }
+  };
 
   const handleDrop = (e) => {
     e.preventDefault();
     setDragActive(false);
-   
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const selected = e.dataTransfer.files[0];
+      if (selected.type !== 'application/pdf') {
+        toast.error('Only PDF files are supported');
+        return;
+      }
+      setFile(selected);
+      if (!title) {
+        setTitle(selected.name.replace(/\.[^/.]+$/, ""));
+      }
+    }
+  };
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!file) {
+      toast.error('Please select a PDF file first');
+      return;
+    }
+    if (!title.trim() || !subject.trim() || !description.trim()) {
+      toast.error('Please fill in all metadata fields');
+      return;
     }
 
-  }
-  const removeFile = () => {
-    setFile(null);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', title.trim());
+    formData.append('subject', subject.trim());
+    formData.append('description', description.trim());
+
+    try {
+      setIsSubmitting(true);
+      toast.info('Uploading and indexing note contents...');
+      
+      await api.post('/upload-notes', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      toast.success('Note uploaded and processed successfully!');
+      navigate('/notes');
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Failed to upload note');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleExtract = async () => {
-    if (!file) return alert("Please upload a file first");
-    await uploadFileToBackend()
-    navigate("/processing");
+  const formatSize = (bytes) => {
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(2)} MB`;
   };
 
-  const handleFullTest = async () => {
-    if (!file) return alert("Please upload a file first");
-    await uploadFileToBackend()
-    navigate("/quiz/all");
-  };
-  const uploadFileToBackend = async () => {
-     if (!file) return alert("Please upload a file first");
-     const formData = new FormData();
-     formData.append("file",file);
-      try {
-        const res = await axios.post(
-          `${BASE_URL}/files/uploadFiles`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        return res.data;
-      }
-      catch (err) {
-        console.error(err);
-        alert("File upload failed");
-        throw err;
-      }
-  }
   return (
-    <Container>
-      <div className="max-w-4xl mx-auto">
-
-        {/* Title */}
-        <h1 className="text-2xl font-bold mb-3 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-          Upload Your Notes 
+    <div className="max-w-3xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+          <BookOpen className="w-8 h-8 text-indigo-400" />
+          Upload New Material
         </h1>
-        <p className="text-gray-400 mb-10">
-          Turn your notes into smart tests, topics & performance analysis.
-        </p>
+        <p className="text-gray-400 mt-1">Upload study documents in PDF format to generate AI insights</p>
+      </div>
 
-       {/* Upload Card */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8 backdrop-blur shadow-xl">
-
-          {/* Drag & Drop Area */}
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-xl p-10 text-center transition cursor-pointer
-              ${
-                dragActive
-                  ? "border-indigo-400 bg-indigo-500/10"
-                  : "border-white/20 hover:border-indigo-400"
-              }`}
-          >
+      <form onSubmit={handleUpload} className="space-y-6 bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8 shadow-xl">
+        {/* Metadata Inputs */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-300">Note Title</label>
             <input
-              type="file"
-              accept=".pdf"
-              onChange={handleFileChange}
-              className="hidden"
-              id="fileInput"
+              type="text"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Chapter 4 - Photosynthesis"
+              className="w-full bg-[#0c0c14]/60 border border-white/[0.08] focus:border-indigo-500 rounded-xl py-3 px-4 text-white outline-none transition-all"
             />
-
-            <label htmlFor="fileInput" className="cursor-pointer block">
-              <div className="text-6xl mb-4">📄</div>
-              <p className="text-lg font-semibold">
-                Drag & drop your PDF here
-              </p>
-              <p className="text-sm text-gray-400">
-                or click to browse files
-              </p>
-            </label>
           </div>
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-300">Subject / Category</label>
+            <input
+              type="text"
+              required
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="e.g. Biology, Calculus, Physics"
+              className="w-full bg-[#0c0c14]/60 border border-white/[0.08] focus:border-indigo-500 rounded-xl py-3 px-4 text-white outline-none transition-all"
+            />
+          </div>
+        </div>
 
-          {/* File Preview */}
-          {file && (
-            <div className="mt-6 flex items-center justify-between bg-black/40 p-4 rounded-xl border border-white/10">
-              <div>
-                <p className="font-semibold">{file.name}</p>
-                <p className="text-sm text-gray-400">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                </p>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-300">Description</label>
+          <textarea
+            required
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Provide a quick summary of what this PDF covers..."
+            className="w-full bg-[#0c0c14]/60 border border-white/[0.08] focus:border-indigo-500 rounded-xl py-3 px-4 text-white outline-none transition-all resize-none"
+          />
+        </div>
+
+        {/* File Drag-and-Drop Area */}
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-300">Select PDF Document</label>
+          
+          {!file ? (
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer relative overflow-hidden group ${
+                dragActive
+                  ? 'border-indigo-500 bg-indigo-500/10'
+                  : 'border-white/10 hover:border-indigo-500/50 hover:bg-white/[0.01]'
+              }`}
+            >
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={handleFileChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+              <div className="flex flex-col items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-4 group-hover:scale-105 transition-all duration-300">
+                  <UploadIcon className="w-6 h-6 text-indigo-400" />
+                </div>
+                <p className="text-white font-medium mb-1">Drag and drop your PDF here</p>
+                <p className="text-gray-500 text-xs">or click to browse from device (Max 25MB)</p>
               </div>
-
+            </div>
+          ) : (
+            <div className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/[0.08] rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white truncate max-w-md">{file.name}</p>
+                  <p className="text-xs text-gray-500">{formatSize(file.size)}</p>
+                </div>
+              </div>
               <button
-                onClick={removeFile}
-                className="text-red-400 hover:text-red-300 text-xl"
+                type="button"
+                onClick={() => setFile(null)}
+                className="p-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-400 hover:text-white transition-all cursor-pointer"
               >
-                ❌
+                <X className="w-4 h-4" />
               </button>
             </div>
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-4 mb-10">
-          <button
-            disabled={!file}
-            onClick={handleExtract}
-            className="flex-1 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 transition disabled:opacity-40 font-semibold"
-          >
-            🔍 Extract Important Topics
-          </button>
-
-          <button
-            disabled={!file}
-            onClick={handleFullTest}
-            className="flex-1 py-4 rounded-xl bg-green-600 hover:bg-green-500 transition disabled:opacity-40 font-semibold"
-          >
-            🧠 Start Full Test
-          </button>
-        </div>
-
-   
-
-      </div>
-    </Container>
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={isSubmitting || !file}
+          className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg ${
+            isSubmitting || !file
+              ? 'bg-indigo-600/50 cursor-not-allowed text-white/50'
+              : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/10 hover:shadow-indigo-600/25'
+          }`}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Processing Document with Gemini AI...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-5 h-5 text-indigo-300" />
+              Upload & Process Study Material
+            </>
+          )}
+        </button>
+      </form>
+    </div>
   );
 };
 
 export default Upload;
-
-

@@ -1,9 +1,20 @@
-import { Navigate } from "react-router-dom";
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 const ProtectedRoute = ({ children }) => {
-  const user = JSON.parse(localStorage.getItem("prepmate-user"));
+  const { isAuthenticated, loading } = useAuth();
 
-  if (!user) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
