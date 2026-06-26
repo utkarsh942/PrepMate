@@ -10,10 +10,12 @@ import {
   BookOpen, 
   Award, 
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Trophy,
+  Flame,
+  TrendingUp
 } from 'lucide-react';
 import api from '../utils/api';
-import LoadingSkeleton from '../components/LoadingSkeleton';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -24,17 +26,18 @@ const Dashboard = () => {
     totalQuizzes: 0,
     avgAccuracy: 0,
     avgTime: '0s',
+    bestScore: 0,
+    studyStreak: 0,
   });
   const [attempts, setAttempts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [weeklyData, setWeeklyData] = useState([0, 0, 0, 0, 0, 0, 0]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        // Fetch analytics
         const analyticsPromise = api.get('/analytics/test-analytics').catch(e => ({ data: {} }));
-        // Fetch notes
         const notesPromise = api.get('/get-notes?limit=100').catch(e => ({ data: [] }));
 
         const [analyticsRes, notesRes] = await Promise.all([analyticsPromise, notesPromise]);
@@ -48,14 +51,44 @@ const Dashboard = () => {
         const secs = Math.round(totalSeconds % 60);
         const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
 
+        // Calculate best score
+        const recentAttempts = analytics.recent_attempts || [];
+        const bestScore = recentAttempts.length > 0
+          ? Math.max(...recentAttempts.map(a => Math.round(a.accuracy || 0)))
+          : 0;
+
+        // Calculate study streak from recent attempts
+        let streak = 0;
+        if (recentAttempts.length > 0) {
+          const dates = [...new Set(recentAttempts.map(a => {
+            const d = new Date(a.date || a.timestamp);
+            return d.toDateString();
+          }))];
+          streak = Math.min(dates.length, 7);
+        }
+
+        // Build weekly activity data from recent attempts
+        const weekDays = [0, 0, 0, 0, 0, 0, 0];
+        const today = new Date();
+        recentAttempts.forEach(a => {
+          const d = new Date(a.date || a.timestamp);
+          const daysDiff = Math.floor((today - d) / (1000 * 60 * 60 * 24));
+          if (daysDiff >= 0 && daysDiff < 7) {
+            weekDays[6 - daysDiff] += 1;
+          }
+        });
+        setWeeklyData(weekDays);
+
         setStats({
           totalNotes: notes.length,
           totalQuizzes: analytics.total_quizzes_taken || 0,
           avgAccuracy: Math.round(analytics.average_accuracy || 0),
           avgTime: timeStr,
+          bestScore,
+          studyStreak: streak,
         });
 
-        setAttempts(analytics.recent_attempts || []);
+        setAttempts(recentAttempts);
       } catch (err) {
         console.error('Failed to load dashboard statistics', err);
       } finally {
@@ -71,172 +104,254 @@ const Dashboard = () => {
       label: 'Total Notes', 
       value: stats.totalNotes, 
       icon: FileText, 
-      border: 'border-l-indigo-500',
-      bg: 'from-indigo-500/5 to-transparent'
+      gradient: 'from-indigo-600 to-indigo-400',
+      bgGlow: 'bg-indigo-500/10',
     },
     { 
       label: 'Quizzes Taken', 
       value: stats.totalQuizzes, 
       icon: Brain, 
-      border: 'border-l-violet-500',
-      bg: 'from-violet-500/5 to-transparent'
+      gradient: 'from-violet-600 to-violet-400',
+      bgGlow: 'bg-violet-500/10',
     },
     { 
-      label: 'Average Accuracy', 
+      label: 'Avg Accuracy', 
       value: `${stats.avgAccuracy}%`, 
       icon: Target, 
-      border: 'border-l-emerald-500',
-      bg: 'from-emerald-500/5 to-transparent'
+      gradient: 'from-emerald-600 to-emerald-400',
+      bgGlow: 'bg-emerald-500/10',
+    },
+    { 
+      label: 'Study Streak', 
+      value: `${stats.studyStreak}d`, 
+      icon: Flame, 
+      gradient: 'from-orange-600 to-amber-400',
+      bgGlow: 'bg-orange-500/10',
     },
     { 
       label: 'Avg Time / Quiz', 
       value: stats.avgTime, 
       icon: Clock, 
-      border: 'border-l-amber-500',
-      bg: 'from-amber-500/5 to-transparent'
+      gradient: 'from-cyan-600 to-cyan-400',
+      bgGlow: 'bg-cyan-500/10',
+    },
+    { 
+      label: 'Best Score', 
+      value: `${stats.bestScore}%`, 
+      icon: Trophy, 
+      gradient: 'from-fuchsia-600 to-pink-400',
+      bgGlow: 'bg-fuchsia-500/10',
     },
   ];
 
+  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const maxActivity = Math.max(...weeklyData, 1);
+
+  // Skeleton loading
   if (loading) {
     return (
       <div className="space-y-8 animate-pulse">
-        <div className="h-10 w-64 bg-white/[0.05] rounded" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 bg-white/[0.03] border border-white/[0.05] rounded-2xl" />
+        {/* Greeting skeleton */}
+        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.05] p-8">
+          <div className="h-8 w-72 bg-white/[0.06] rounded-lg mb-3" />
+          <div className="h-5 w-96 bg-white/[0.04] rounded-lg" />
+        </div>
+        {/* Stat cards skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-32 bg-white/[0.03] border border-white/[0.05] rounded-2xl" />
           ))}
         </div>
-        <div className="h-64 bg-white/[0.03] border border-white/[0.05] rounded-2xl" />
+        {/* Content skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="h-64 bg-white/[0.03] border border-white/[0.05] rounded-2xl" />
+          <div className="h-64 bg-white/[0.03] border border-white/[0.05] rounded-2xl" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-10">
-      {/* Greeting */}
-      <div>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
-          Welcome back, {user?.full_name || 'Student'}!
-          <Sparkles className="w-6 h-6 text-indigo-400" />
-        </h1>
-        <p className="text-gray-400 mt-1">Here is a summary of your recent study performance</p>
+    <div className="space-y-8">
+      {/* ─── Greeting Banner ─── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600/10 via-violet-600/10 to-fuchsia-600/10 border border-white/[0.06] p-8 animate-fade-in">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">
+              Welcome back, {user?.full_name || 'Student'}!
+            </h1>
+            <Sparkles className="w-7 h-7 text-indigo-400 animate-float" />
+          </div>
+          <p className="text-gray-400 max-w-lg">
+            Here's a summary of your study performance. Keep up the great work and stay consistent! 🚀
+          </p>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* ─── Stats Grid (6 cards) ─── */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
         {statCards.map((card, i) => {
           const Icon = card.icon;
           return (
             <div
               key={i}
-              className={`bg-gradient-to-br ${card.bg} border-y border-r border-white/[0.06] border-l-4 ${card.border} rounded-2xl p-6 flex items-center justify-between shadow-xl`}
+              className="group relative overflow-hidden bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] animate-slide-up"
+              style={{ animationDelay: `${i * 0.08}s`, opacity: 0 }}
             >
-              <div>
-                <p className="text-sm font-semibold text-gray-400">{card.label}</p>
-                <h3 className="text-2xl font-bold text-white mt-1.5">{card.value}</h3>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center text-gray-300">
-                <Icon className="w-5 h-5" />
+              {/* Gradient glow */}
+              <div className={`absolute top-0 right-0 w-20 h-20 ${card.bgGlow} rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:w-28 group-hover:h-28 transition-all duration-500`} />
+              
+              <div className="relative z-10 flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{card.label}</p>
+                  <h3 className="text-3xl font-bold text-white">{card.value}</h3>
+                </div>
+                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center shadow-lg`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Recent Attempts */}
-      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 md:p-8 shadow-2xl">
-        <div className="flex items-center gap-2.5 mb-6">
-          <Award className="w-6 h-6 text-indigo-400" />
-          <h2 className="text-xl font-bold text-white">Recent Quiz Attempts</h2>
+      {/* ─── Weekly Progress & Recent Activity ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Weekly Progress */}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 animate-slide-up" style={{ animationDelay: '0.5s', opacity: 0 }}>
+          <div className="flex items-center gap-2.5 mb-6">
+            <TrendingUp className="w-5 h-5 text-indigo-400" />
+            <h2 className="text-lg font-bold text-white">Weekly Activity</h2>
+          </div>
+          <div className="flex items-end justify-between gap-3 h-40">
+            {weeklyData.map((val, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                <div className="w-full flex flex-col justify-end h-28">
+                  <div
+                    className={`w-full rounded-lg transition-all duration-700 ${
+                      val > 0
+                        ? 'bg-gradient-to-t from-indigo-600 to-violet-500'
+                        : 'bg-white/[0.04]'
+                    }`}
+                    style={{
+                      height: val > 0 ? `${Math.max((val / maxActivity) * 100, 15)}%` : '8px',
+                      animationDelay: `${i * 0.1}s`,
+                    }}
+                  />
+                </div>
+                <span className="text-xs text-gray-500">{dayLabels[i]}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {attempts.length === 0 ? (
-          <div className="text-center py-10 text-gray-500 text-sm">
-            No quiz attempts recorded yet. Head over to My Notes to generate a test!
+        {/* Recent Activity */}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 animate-slide-up" style={{ animationDelay: '0.6s', opacity: 0 }}>
+          <div className="flex items-center gap-2.5 mb-6">
+            <Award className="w-5 h-5 text-indigo-400" />
+            <h2 className="text-lg font-bold text-white">Recent Quizzes</h2>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-white/[0.05] text-xs font-semibold text-gray-400">
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Score</th>
-                  <th className="py-3 px-4 text-center">Accuracy</th>
-                  <th className="py-3 px-4">Time Spent</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/[0.03]">
-                {attempts.map((attempt, index) => (
-                  <tr key={index} className="text-sm text-gray-300 hover:bg-white/[0.01] transition-colors">
-                    <td className="py-4 px-4">
-                      {new Date(attempt.date || attempt.timestamp).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </td>
-                    <td className="py-4 px-4 font-semibold text-white">
-                      {attempt.correct_answers} / {attempt.total_questions}
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                        attempt.accuracy >= 80 
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : attempt.accuracy >= 50
-                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                      }`}>
-                        {Math.round(attempt.accuracy)}%
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      {attempt.time_spent_seconds 
-                        ? `${Math.floor(attempt.time_spent_seconds / 60)}m ${attempt.time_spent_seconds % 60}s` 
-                        : 'N/A'
-                      }
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+
+          {attempts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-40 text-gray-500 text-sm">
+              <Brain className="w-8 h-8 mb-3 text-gray-600" />
+              <p>No quizzes taken yet</p>
+              <p className="text-xs text-gray-600 mt-1">Start from your notes!</p>
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-40 overflow-y-auto pr-1">
+              {attempts.slice(0, 5).map((attempt, index) => (
+                <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
+                      attempt.accuracy >= 80
+                        ? 'bg-emerald-500/10 text-emerald-400'
+                        : attempt.accuracy >= 50
+                        ? 'bg-amber-500/10 text-amber-400'
+                        : 'bg-rose-500/10 text-rose-400'
+                    }`}>
+                      {Math.round(attempt.accuracy)}%
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white">
+                        {attempt.correct_answers}/{attempt.total_questions} correct
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(attempt.date || attempt.timestamp).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {attempt.time_spent_seconds
+                      ? `${Math.floor(attempt.time_spent_seconds / 60)}m ${attempt.time_spent_seconds % 60}s`
+                      : 'N/A'
+                    }
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Quick Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* ─── Quick Actions ─── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div
           onClick={() => navigate('/upload')}
-          className="group cursor-pointer bg-white/[0.01] border border-white/[0.06] hover:border-indigo-500/30 hover:bg-indigo-500/[0.02] rounded-2xl p-6 transition-all duration-300 flex items-center justify-between"
+          className="group cursor-pointer relative overflow-hidden bg-gradient-to-br from-indigo-600/5 to-indigo-600/[0.02] border border-white/[0.06] hover:border-indigo-500/30 rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] animate-slide-up"
+          style={{ animationDelay: '0.7s', opacity: 0 }}
         >
-          <div className="space-y-1">
-            <h4 className="text-base font-bold text-white group-hover:text-indigo-400 transition-colors">Upload Study Material</h4>
-            <p className="text-xs text-gray-400">Process notes & slides with Gemini AI</p>
+          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="space-y-1.5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-400 flex items-center justify-center mb-3 shadow-lg shadow-indigo-500/20">
+                <Upload className="w-5 h-5 text-white" />
+              </div>
+              <h4 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors">Upload Material</h4>
+              <p className="text-xs text-gray-400">Process notes with Gemini AI</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
           </div>
-          <Upload className="w-5 h-5 text-gray-500 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
         </div>
 
         <div
           onClick={() => navigate('/notes')}
-          className="group cursor-pointer bg-white/[0.01] border border-white/[0.06] hover:border-violet-500/30 hover:bg-violet-500/[0.02] rounded-2xl p-6 transition-all duration-300 flex items-center justify-between"
+          className="group cursor-pointer relative overflow-hidden bg-gradient-to-br from-violet-600/5 to-violet-600/[0.02] border border-white/[0.06] hover:border-violet-500/30 rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] animate-slide-up"
+          style={{ animationDelay: '0.8s', opacity: 0 }}
         >
-          <div className="space-y-1">
-            <h4 className="text-base font-bold text-white group-hover:text-violet-400 transition-colors">Browse Notes</h4>
-            <p className="text-xs text-gray-400">View notes, summaries & flashcards</p>
+          <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="space-y-1.5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-violet-400 flex items-center justify-center mb-3 shadow-lg shadow-violet-500/20">
+                <BookOpen className="w-5 h-5 text-white" />
+              </div>
+              <h4 className="text-base font-bold text-white group-hover:text-violet-300 transition-colors">Browse Notes</h4>
+              <p className="text-xs text-gray-400">View summaries & flashcards</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-violet-400 group-hover:translate-x-1 transition-all" />
           </div>
-          <BookOpen className="w-5 h-5 text-gray-500 group-hover:text-violet-400 group-hover:translate-x-1 transition-all" />
         </div>
 
         <div
           onClick={() => navigate('/notes')}
-          className="group cursor-pointer bg-white/[0.01] border border-white/[0.06] hover:border-fuchsia-500/30 hover:bg-fuchsia-500/[0.02] rounded-2xl p-6 transition-all duration-300 flex items-center justify-between"
+          className="group cursor-pointer relative overflow-hidden bg-gradient-to-br from-fuchsia-600/5 to-fuchsia-600/[0.02] border border-white/[0.06] hover:border-fuchsia-500/30 rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] animate-slide-up"
+          style={{ animationDelay: '0.9s', opacity: 0 }}
         >
-          <div className="space-y-1">
-            <h4 className="text-base font-bold text-white group-hover:text-fuchsia-400 transition-colors">Practice Quizzes</h4>
-            <p className="text-xs text-gray-400">Test your knowledge and review scores</p>
+          <div className="absolute top-0 right-0 w-24 h-24 bg-fuchsia-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="space-y-1.5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fuchsia-600 to-pink-400 flex items-center justify-center mb-3 shadow-lg shadow-fuchsia-500/20">
+                <Brain className="w-5 h-5 text-white" />
+              </div>
+              <h4 className="text-base font-bold text-white group-hover:text-fuchsia-300 transition-colors">Start Quiz</h4>
+              <p className="text-xs text-gray-400">Test your knowledge</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-fuchsia-400 group-hover:translate-x-1 transition-all" />
           </div>
-          <Brain className="w-5 h-5 text-gray-500 group-hover:text-fuchsia-400 group-hover:translate-x-1 transition-all" />
         </div>
       </div>
     </div>

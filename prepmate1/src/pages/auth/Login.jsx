@@ -19,7 +19,7 @@ const Login = () => {
     const initGoogle = () => {
       if (window.google && googleBtnRef.current) {
         window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '1051717211782-1f2q4qjokrbnds7o8beqh5bgtnjhbo3h.apps.googleusercontent.com',
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           callback: handleGoogleLogin,
         });
         window.google.accounts.id.renderButton(googleBtnRef.current, {
@@ -82,25 +82,7 @@ const Login = () => {
 
       if (res.data.access_token) {
         const token = res.data.access_token;
-        
-        // Fetch profile to get user_id, then get user details
-        const profileRes = await api.get('/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        const userId = profileRes.data.user?.user_id;
-        let userData = { email, full_name: 'Student' };
-
-        if (userId) {
-          try {
-            const detailRes = await api.get(`/get-user/${userId}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            userData = detailRes.data;
-          } catch (e) {
-            console.error('Failed to load full profile details', e);
-          }
-        }
+        const userData = res.data.user || { email, full_name: 'Student' };
 
         login(token, userData);
         toast.success('Login successful!');
@@ -117,7 +99,7 @@ const Login = () => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full animate-fade-in">
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold text-white tracking-tight">Welcome back</h1>
         <p className="text-gray-400 text-sm mt-1.5">Sign in to your PrepMate account</p>

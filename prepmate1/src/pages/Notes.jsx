@@ -21,9 +21,8 @@ const Notes = () => {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isDeleting, setIsDeleting] = useState(null); // stores note ID being deleted
+  const [isDeleting, setIsDeleting] = useState(null);
 
-  // Fetch all notes or search notes
   const fetchNotes = useCallback(async (query = '') => {
     try {
       setLoading(true);
@@ -42,7 +41,6 @@ const Notes = () => {
     }
   }, []);
 
-  // Debounced search logic
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchNotes(searchQuery);
@@ -51,7 +49,6 @@ const Notes = () => {
     return () => clearTimeout(delayDebounce);
   }, [searchQuery, fetchNotes]);
 
-  // Handle file download
   const handleDownload = async (note) => {
     try {
       toast.info(`Starting download for ${note.title}...`);
@@ -71,7 +68,6 @@ const Notes = () => {
     }
   };
 
-  // Handle file deletion
   const handleDelete = async (id) => {
     try {
       setIsDeleting(id);
@@ -103,7 +99,7 @@ const Notes = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       {/* Header & Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -112,7 +108,7 @@ const Notes = () => {
         </div>
         <button
           onClick={() => navigate('/upload')}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl px-5 py-3 font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/25 shrink-0 self-start md:self-auto"
+          className="group bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl px-5 py-3 font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/15 hover:shadow-indigo-600/30 shrink-0 self-start md:self-auto hover:scale-[1.02]"
         >
           <Plus className="w-5 h-5" />
           Upload Notes
@@ -127,7 +123,7 @@ const Notes = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search by title, subject, or description..."
-          className="w-full bg-[#0c0c14]/60 border border-white/[0.08] hover:border-white/[0.15] focus:border-indigo-500/80 focus:ring-2 focus:ring-indigo-500/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-500 outline-none transition-all"
+          className="w-full glass rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-500 outline-none transition-all focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/10 hover:border-white/[0.15]"
         />
         {searchQuery && (
           <button 
@@ -156,13 +152,17 @@ const Notes = () => {
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {notes.map((note) => (
+          {notes.map((note, index) => (
             <div
               key={note._id}
-              className="group bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04] rounded-2xl p-6 flex flex-col justify-between transition-all duration-300 relative shadow-xl"
+              className="group relative bg-white/[0.02] border border-white/[0.06] hover:border-indigo-500/20 rounded-2xl p-6 flex flex-col justify-between transition-all duration-300 shadow-xl hover:shadow-indigo-500/5 hover:scale-[1.01] animate-slide-up"
+              style={{ animationDelay: `${index * 0.05}s`, opacity: 0 }}
             >
+              {/* Subtle gradient border glow on hover */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/5 via-transparent to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              
               {/* Note Content */}
-              <div>
+              <div className="relative z-10">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <span className="text-xs px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/15 font-semibold uppercase tracking-wider truncate max-w-[150px]">
                     {note.subject || 'General'}
@@ -180,7 +180,7 @@ const Notes = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="border-t border-white/[0.05] pt-4 mt-auto">
+              <div className="relative z-10 border-t border-white/[0.05] pt-4 mt-auto">
                 {/* AI Helpers */}
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <button

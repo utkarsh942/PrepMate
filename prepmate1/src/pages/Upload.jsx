@@ -21,7 +21,6 @@ const Upload = () => {
         return;
       }
       setFile(selected);
-      // Auto-populate title if empty
       if (!title) {
         setTitle(selected.name.replace(/\.[^/.]+$/, ""));
       }
@@ -97,16 +96,18 @@ const Upload = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
       <div>
         <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-          <BookOpen className="w-8 h-8 text-indigo-400" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <BookOpen className="w-5 h-5 text-white" />
+          </div>
           Upload New Material
         </h1>
-        <p className="text-gray-400 mt-1">Upload study documents in PDF format to generate AI insights</p>
+        <p className="text-gray-400 mt-2 ml-[52px]">Upload study documents in PDF format to generate AI insights</p>
       </div>
 
-      <form onSubmit={handleUpload} className="space-y-6 bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8 shadow-xl">
+      <form onSubmit={handleUpload} className="space-y-6 glass rounded-2xl p-8 shadow-xl">
         {/* Metadata Inputs */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -117,7 +118,7 @@ const Upload = () => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Chapter 4 - Photosynthesis"
-              className="w-full bg-[#0c0c14]/60 border border-white/[0.08] focus:border-indigo-500 rounded-xl py-3 px-4 text-white outline-none transition-all"
+              className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/10 rounded-xl py-3 px-4 text-white outline-none transition-all placeholder-gray-600"
             />
           </div>
           <div className="space-y-2">
@@ -128,7 +129,7 @@ const Upload = () => {
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="e.g. Biology, Calculus, Physics"
-              className="w-full bg-[#0c0c14]/60 border border-white/[0.08] focus:border-indigo-500 rounded-xl py-3 px-4 text-white outline-none transition-all"
+              className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/10 rounded-xl py-3 px-4 text-white outline-none transition-all placeholder-gray-600"
             />
           </div>
         </div>
@@ -141,7 +142,7 @@ const Upload = () => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Provide a quick summary of what this PDF covers..."
-            className="w-full bg-[#0c0c14]/60 border border-white/[0.08] focus:border-indigo-500 rounded-xl py-3 px-4 text-white outline-none transition-all resize-none"
+            className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/10 rounded-xl py-3 px-4 text-white outline-none transition-all resize-none placeholder-gray-600"
           />
         </div>
 
@@ -154,30 +155,34 @@ const Upload = () => {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all cursor-pointer relative overflow-hidden group ${
+              className={`relative overflow-hidden rounded-2xl p-10 text-center transition-all cursor-pointer group ${
                 dragActive
-                  ? 'border-indigo-500 bg-indigo-500/10'
-                  : 'border-white/10 hover:border-indigo-500/50 hover:bg-white/[0.01]'
+                  ? 'border-2 border-indigo-500 bg-indigo-500/10 shadow-[inset_0_0_30px_rgba(99,102,241,0.1)]'
+                  : 'border-2 border-dashed border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.01]'
               }`}
             >
+              {/* Gradient border effect on hover */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/5 via-transparent to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              
               <input
                 type="file"
                 accept="application/pdf"
                 onChange={handleFileChange}
-                className="absolute inset-0 opacity-0 cursor-pointer"
+                title=""
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
               />
-              <div className="flex flex-col items-center justify-center">
-                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-4 group-hover:scale-105 transition-all duration-300">
-                  <UploadIcon className="w-6 h-6 text-indigo-400" />
+              <div className="relative z-10 flex flex-col items-center justify-center pointer-events-none">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 flex items-center justify-center mb-4 group-hover:scale-110 transition-all duration-300">
+                  <UploadIcon className="w-7 h-7 text-indigo-400" />
                 </div>
                 <p className="text-white font-medium mb-1">Drag and drop your PDF here</p>
                 <p className="text-gray-500 text-xs">or click to browse from device (Max 25MB)</p>
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/[0.08] rounded-xl">
+            <div className="flex items-center justify-between p-4 glass rounded-xl animate-scale-in">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500/15 to-orange-500/15 flex items-center justify-center text-red-400">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
@@ -203,7 +208,7 @@ const Upload = () => {
           className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg ${
             isSubmitting || !file
               ? 'bg-indigo-600/50 cursor-not-allowed text-white/50'
-              : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/10 hover:shadow-indigo-600/25'
+              : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-indigo-600/15 hover:shadow-indigo-600/30 hover:scale-[1.01]'
           }`}
         >
           {isSubmitting ? (

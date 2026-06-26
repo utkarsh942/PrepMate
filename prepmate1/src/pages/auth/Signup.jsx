@@ -31,7 +31,7 @@ const Signup = () => {
     const initGoogle = () => {
       if (window.google && googleBtnRef.current) {
         window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '1051717211782-1f2q4qjokrbnds7o8beqh5bgtnjhbo3h.apps.googleusercontent.com',
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           callback: handleGoogleLogin,
         });
         window.google.accounts.id.renderButton(googleBtnRef.current, {
@@ -106,7 +106,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full animate-fade-in">
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-white tracking-tight">Create an account</h1>
         <p className="text-gray-400 text-sm mt-1.5">Join PrepMate to study smarter</p>
