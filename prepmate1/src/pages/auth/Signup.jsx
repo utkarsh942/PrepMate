@@ -31,7 +31,7 @@ const Signup = () => {
     const initGoogle = () => {
       if (window.google && googleBtnRef.current) {
         window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '1051717211782-1f2q4qjokrbnds7o8beqh5bgtnjhbo3h.apps.googleusercontent.com',
           callback: handleGoogleLogin,
         });
         window.google.accounts.id.renderButton(googleBtnRef.current, {
