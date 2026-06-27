@@ -1,16 +1,63 @@
-# React + Vite
+# PrepMate - AI Study Platform (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The frontend interface for PrepMate, a modern React application that allows users to upload PDF notes and instantly generate AI-powered flashcards, quizzes, and summaries.
 
-Currently, two official plugins are available:
+## 🚀 Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Framework:** [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
+- **Icons:** [Lucide React](https://lucide.dev/)
+- **Routing:** React Router v6
+- **Authentication:** Google Identity Services (`@react-oauth/google`)
 
-## React Compiler
+## ✨ Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Modern UI/UX:** Clean, responsive design built with Tailwind CSS.
+- **Google Sign-In:** One-click authentication using the modern Google Identity popup.
+- **PDF Uploads:** Drag-and-drop interface for uploading lecture notes and documents.
+- **Interactive Flashcards:** Flippable 3D flashcards with customizable quantities (5, 10, 15, 20 cards).
+- **CBT Quiz Engine:** Computer Based Test (CBT) style quiz interface mimicking real-world exams (JEE/NEET style layout), featuring:
+  - Question navigation grid.
+  - Mark for review system.
+  - Detailed post-quiz analytics and explanations.
+- **Dashboard:** Tracks user progress, recent activity, and quiz performance graphs.
 
-## Expanding the ESLint configuration
+## 🛠️ Local Development Setup
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- A running instance of the [PrepMate Backend](https://github.com/YOUR_USERNAME/prepmate_backend)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/prepmate-frontend.git
+   cd prepmate-frontend
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Variables:**
+   Create a `.env` file in the root directory and add your configurations:
+   ```env
+   VITE_BASE_URL=http://localhost:8000
+   VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id.apps.googleusercontent.com
+   ```
+   *(Note: Ensure your Google Cloud Console has `http://localhost:5173` listed in the Authorized JavaScript origins).*
+
+4. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+   The application will run on `http://localhost:5173`.
+
+## ☁️ Deployment
+
+This project is optimized for deployment on platforms like **Vercel**.
+- The project includes a `vercel.json` file to handle React Router client-side routing rewrites.
+- Ensure you set the `VITE_BASE_URL` to your production backend URL and `VITE_GOOGLE_CLIENT_ID` in the Vercel Environment Variables dashboard before deploying.
+- Make sure to whitelist your live Vercel domain in your Google Cloud Console's OAuth settings.
