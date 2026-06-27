@@ -2,7 +2,7 @@
 
 The frontend interface for PrepMate, a modern React application that allows users to upload PDF notes and instantly generate AI-powered flashcards, quizzes, and summaries.
 
-## 🚀 Tech Stack
+##  Tech Stack
 
 - **Framework:** [React](https://react.dev/) + [Vite](https://vitejs.dev/)
 - **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
@@ -10,7 +10,7 @@ The frontend interface for PrepMate, a modern React application that allows user
 - **Routing:** React Router v6
 - **Authentication:** Google Identity Services (`@react-oauth/google`)
 
-## ✨ Key Features
+##  Key Features
 
 - **Modern UI/UX:** Clean, responsive design built with Tailwind CSS.
 - **Google Sign-In:** One-click authentication using the modern Google Identity popup.
@@ -22,7 +22,7 @@ The frontend interface for PrepMate, a modern React application that allows user
   - Detailed post-quiz analytics and explanations.
 - **Dashboard:** Tracks user progress, recent activity, and quiz performance graphs.
 
-## 🛠️ Local Development Setup
+##  Local Development Setup
 
 ### Prerequisites
 - Node.js (v18 or higher recommended)
@@ -60,7 +60,7 @@ The frontend interface for PrepMate, a modern React application that allows user
    ```
    The application will run on `http://localhost:5173`.
 
-## ☁️ Deployment
+##  Deployment
 
 This project is optimized for deployment on platforms like **Vercel**.
 - The project includes a `vercel.json` file to handle React Router client-side routing rewrites.
